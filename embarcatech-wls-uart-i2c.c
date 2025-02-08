@@ -34,14 +34,14 @@ ssd1306_t display;
 
 void update_display_message(const char *message) {
     ssd1306_fill(&display, false); // Limpa o display
-    ssd1306_draw_string(&display, "Recebido:", 0, 0);
-    ssd1306_draw_string(&display, message, 0, 16);
+    ssd1306_draw_string(&display, "Recebido:", 0, 20);
+    ssd1306_draw_string(&display, message, 0, 40);
     ssd1306_send_data(&display);
 }
 
 void update_display_status(const char *status) {
     ssd1306_fill(&display, false); // Limpa o display
-    ssd1306_draw_string(&display, status, 0, 0);
+    ssd1306_draw_string(&display, status, 0, 20);
     ssd1306_send_data(&display);
 }
 
@@ -129,6 +129,8 @@ void process_uart_input() {
     if (uart_is_readable(UART_ID)) {
         char received_char = uart_getc(UART_ID);
         char message[2] = {received_char, '\0'}; // Converte para string
+
+        // Exibe caracteres recebidos corretamente
         printf("[UART] Recebido: %c\n", received_char);
         update_display_message(message); // Atualiza o display com o caractere recebido
     }
