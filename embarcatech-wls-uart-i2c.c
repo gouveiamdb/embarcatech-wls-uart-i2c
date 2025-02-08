@@ -8,7 +8,7 @@
 // Definições de hardware para BitDogLab
 #define BUTTON_A_PIN 5  // GPIO do botão A
 #define BUTTON_B_PIN 6  // GPIO do botão B
-#define JOYSTICK_BUTTON_PIN 7 // GPIO do botão do joystick
+#define JOYSTICK_BUTTON_PIN 22 // GPIO do botão do joystick
 #define LED_GREEN_PIN 11 // GPIO do LED Verde
 #define LED_BLUE_PIN 12 // GPIO do LED Azul
 #define LED_RED_PIN 13 // GPIO do LED Vermelho
@@ -43,7 +43,7 @@ void update_display_message(const char *message) {
 
 void update_display_status(const char *status) {
     ssd1306_fill(&display, false); // Limpa o display
-    ssd1306_draw_string(&display, status, 0, 20);
+    ssd1306_draw_string(&display, status, 0, 10);
     ssd1306_send_data(&display);
 }
 
@@ -61,7 +61,7 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
         led_green_state = !led_green_state;
         gpio_put(LED_GREEN_PIN, led_green_state);
         printf("[BitDogLab] Botao A pressionado! LED Verde: %s\n", led_green_state ? "ON" : "OFF");
-        update_display_status(led_green_state ? "Botao A\nVerde     ON\nPara limpar a tela, pressione o botao do Joystick!" : "Botao A\nVerde     OFF\nPara limpar a tela, pressione o botao do Joystick!");
+        update_display_status(led_green_state ? "Botao A        LED Verde    ON                              Para limpar a tela, pressione o botao do Joystick!" : "Botao A        LED Verde   OFF                              Para limpar a tela, pressione o botao do Joystick!");
     }
 
     if (gpio == BUTTON_B_PIN) {
@@ -74,7 +74,7 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
         led_blue_state = !led_blue_state;
         gpio_put(LED_BLUE_PIN, led_blue_state);
         printf("[BitDogLab] Botao B pressionado! LED Azul: %s\n", led_blue_state ? "ON" : "OFF");
-        update_display_status(led_blue_state ? "Botao B\nAzul      ON\nPara limpar a tela, pressione o botao do Joystick!" : "Botao B\nAzul      OFF\nPara limpar a tela, pressione o botao do Joystick!");
+        update_display_status(led_blue_state ? "Botao B        LED Azul     ON                              Para limpar a tela, pressione o botao do Joystick!" : "Botao B        LED Azul    OFF                              Para limpar a tela, pressione o botao do Joystick!");
     }
 
     if (gpio == JOYSTICK_BUTTON_PIN) {
