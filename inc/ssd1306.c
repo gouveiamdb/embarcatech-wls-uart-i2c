@@ -67,21 +67,25 @@ void ssd1306_draw_pixel(ssd1306_t *display, uint8_t x, uint8_t y, bool color) {
 void ssd1306_draw_string(ssd1306_t *display, uint8_t x, uint8_t y, const char *str, uint8_t size, bool color) {
     while (*str) {
         ssd1306_draw_char(display, x, y, *str, size, color);
-        x += size * 6; // Avança 6 pixels por caractere
+        x += size * 8; // Avança 8 pixels por caractere
         str++;
     }
 }
 
 void ssd1306_draw_char(ssd1306_t *display, uint8_t x, uint8_t y, char chr, uint8_t size, bool color) {
-    if (chr < 32 || chr > 127) {
-        return; // Caracteres fora do intervalo ASCII
+    if (chr < 32 || chr > 122) {
+        return; // Caracteres fora do intervalo ASCII (32-122)
     }
 
-    for (uint8_t i = 0; i < 5; i++) { // Cada caractere tem 5 colunas
-        uint8_t line = font[chr - 32][i];
+    for (uint8_t i = 0; i < 8; i++) { // Cada caractere tem 8 colunas
+        uint8_t line = font[(chr - 32) * 8 + i];
         for (uint8_t j = 0; j < 8; j++) {
             if (line & (1 << j)) {
-                ssd1306_draw_pixel(display, x + i * size, y + j * size, color);
+                for (uint8_t sx = 0; sx < size; sx++) {
+                    for (uint8_t sy = 0; sy < size; sy++) {
+                        ssd1306_draw_pixel(display, x + i * size + sx, y + j * size + sy, color);
+                    }
+                }
             }
         }
     }
