@@ -32,7 +32,14 @@ static absolute_time_t last_interrupt_time_b;
 // Inicialização do display SSD1306
 ssd1306_t display;
 
-void update_display() {
+void update_display_message(const char *message) {
+    ssd1306_fill(&display, false); // Limpa o display
+    ssd1306_draw_string(&display, "Recebido:", 0, 0);
+    ssd1306_draw_string(&display, message, 0, 16);
+    ssd1306_send_data(&display);
+}
+
+void update_display_status() {
     ssd1306_fill(&display, false); // Limpa o display
     ssd1306_draw_string(&display, "BitDogLab Status:", 0, 0);
     ssd1306_draw_string(&display, led_green_state ? "LED Verde: ON" : "LED Verde: OFF", 0, 8);
@@ -67,7 +74,7 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
         gpio_put(LED_BLUE_PIN, led_blue_state);
         printf("[BitDogLab] Botão B pressionado! LED Azul: %s\n", led_blue_state ? "ON" : "OFF");
     }
-    update_display();
+    update_display_status();
 }
 
 void setup() {
@@ -90,7 +97,7 @@ void setup() {
     ssd1306_init(&display, WIDTH, HEIGHT, false, 0x3C, I2C_PORT);
     ssd1306_config(&display);
     ssd1306_fill(&display, false);
-    update_display();
+    update_display_status();
 
     // Configuração dos LEDs
     gpio_init(LED_GREEN_PIN);
@@ -122,7 +129,9 @@ void setup() {
 void process_uart_input() {
     if (uart_is_readable(UART_ID)) {
         char received_char = uart_getc(UART_ID);
+        char message[2] = {received_char, '\0'}; // Converte para string
         printf("[UART] Recebido: %c\n", received_char);
+        update_display_message(message); // Atualiza o display com o caractere recebido
     }
 }
 
