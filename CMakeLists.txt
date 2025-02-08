@@ -45,6 +45,7 @@ target_link_libraries(embarcatech-wls-uart-i2c
     pico_stdlib
     hardware_gpio
     hardware_clocks
+    hardware_i2c
 )
 
 # Adiciona os diretórios de inclusão

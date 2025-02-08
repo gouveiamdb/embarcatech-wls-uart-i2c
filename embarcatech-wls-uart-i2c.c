@@ -2,7 +2,9 @@
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 #include "hardware/uart.h"
+#include "hardware/i2c.h"
 #include "hardware/clocks.h"
+#include "ssd1306.h"
 
 // Definições de hardware para BitDogLab
 #define BUTTON_A_PIN 5  // GPIO do botão A
@@ -14,7 +16,10 @@
 #define UART_TX_PIN 0
 #define UART_RX_PIN 1
 #define BAUD_RATE 115200
-#define DEBOUNCE_US 200000 // 50ms de debounce
+#define I2C_PORT i2c1
+#define I2C_SDA 14
+#define I2C_SCL 15
+#define DEBOUNCE_US 200000 // 200ms de debounce
 
 // Estado dos LEDs
 static volatile bool led_green_state = false;
@@ -24,6 +29,17 @@ static volatile bool led_red_state = false;
 // Variáveis de debounce separadas para cada botão
 static absolute_time_t last_interrupt_time_a;
 static absolute_time_t last_interrupt_time_b;
+
+// Inicialização do display SSD1306
+ssd1306_t display;
+
+void update_display() {
+    ssd1306_clear(&display);
+    ssd1306_draw_string(&display, 0, 0, "BitDogLab Status:", 1, true);
+    ssd1306_draw_string(&display, 0, 10, led_green_state ? "LED Verde: ON" : "LED Verde: OFF", 1, true);
+    ssd1306_draw_string(&display, 0, 20, led_blue_state ? "LED Azul: ON" : "LED Azul: OFF", 1, true);
+    ssd1306_show(&display);
+}
 
 // Callback global para lidar com interrupções de GPIO
 void gpio_irq_handler(uint gpio, uint32_t events) {
@@ -52,6 +68,7 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
         gpio_put(LED_BLUE_PIN, led_blue_state);
         printf("[BitDogLab] Botão B pressionado! LED Azul: %s\n", led_blue_state ? "ON" : "OFF");
     }
+    update_display();
 }
 
 void setup() {
@@ -62,12 +79,24 @@ void setup() {
     uart_init(UART_ID, BAUD_RATE);
     gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
     gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
-
+    
+    // Inicializa I2C para SSD1306
+    i2c_init(I2C_PORT, 400 * 1000);
+    gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
+    gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);
+    gpio_pull_up(I2C_SDA);
+    gpio_pull_up(I2C_SCL);
+    
+    // Inicializa o display SSD1306
+    ssd1306_init(&display, I2C_PORT, 0x3C, 128, 32);
+    ssd1306_clear(&display);
+    update_display();
+    
     // Configuração dos LEDs
     gpio_init(LED_GREEN_PIN);
     gpio_set_dir(LED_GREEN_PIN, GPIO_OUT);
     gpio_put(LED_GREEN_PIN, 0);
-
+    
     gpio_init(LED_BLUE_PIN);
     gpio_set_dir(LED_BLUE_PIN, GPIO_OUT);
     gpio_put(LED_BLUE_PIN, 0);
@@ -75,7 +104,7 @@ void setup() {
     gpio_init(LED_RED_PIN);
     gpio_set_dir(LED_RED_PIN, GPIO_OUT);
     gpio_put(LED_RED_PIN, 0);
-
+    
     // Configuração dos botões
     gpio_init(BUTTON_A_PIN);
     gpio_set_dir(BUTTON_A_PIN, GPIO_IN);
