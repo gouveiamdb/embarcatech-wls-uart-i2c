@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
+#include "hardware/clocks.h"
 
-// Definições de hardware
+// Definições de hardware para BitDogLab
 #define BUTTON_A_PIN 5  // GPIO do botão A
 #define LED_GREEN_PIN 11 // GPIO do LED Verde
 #define DEBOUNCE_US 200000 // 200ms de debounce
@@ -26,29 +27,29 @@ void button_a_irq_handler(uint gpio, uint32_t events) {
     gpio_put(LED_GREEN_PIN, led_green_state);
 
     // Exibir mensagem no Serial Monitor
-    printf("Botão A pressionado! LED Verde: %s\n", led_green_state ? "ON" : "OFF");
+    printf("[BitDogLab] Botão A pressionado! LED Verde: %s\n", led_green_state ? "ON" : "OFF");
 }
 
 void setup() {
     stdio_init_all(); // Inicializa comunicação UART
-
+    sleep_ms(500); // Aguarda estabilização da BitDogLab
+    
     // Configuração do LED Verde
     gpio_init(LED_GREEN_PIN);
     gpio_set_dir(LED_GREEN_PIN, GPIO_OUT);
+    gpio_put(LED_GREEN_PIN, 0); // Garante que o LED inicia desligado
 
     // Configuração do Botão A
     gpio_init(BUTTON_A_PIN);
     gpio_set_dir(BUTTON_A_PIN, GPIO_IN);
-    gpio_pull_up(BUTTON_A_PIN);
+    gpio_pull_up(BUTTON_A_PIN); // Confirma que o pull-up está ativo
     gpio_set_irq_enabled_with_callback(BUTTON_A_PIN, GPIO_IRQ_EDGE_FALL, true, &button_a_irq_handler);
 }
 
-int main()
-{
-    stdio_init_all();
-
+int main() {
+    setup();
     while (1) {
-        sleep_ms(100); // Mantém o loop rodando sem sobrecarregar
+        tight_loop_contents(); // Mantém o loop eficiente
     }
     return 0;
 }
