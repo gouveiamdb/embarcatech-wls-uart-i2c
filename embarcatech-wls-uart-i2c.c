@@ -1,14 +1,54 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
+#include "hardware/gpio.h"
 
+// Definições de hardware
+#define BUTTON_A_PIN 5  // GPIO do botão A
+#define LED_GREEN_PIN 11 // GPIO do LED Verde
+#define DEBOUNCE_US 200000 // 200ms de debounce
 
+// Estado do LED
+static volatile bool led_green_state = false;
+
+// Função de interrupção do botão A
+void button_a_irq_handler(uint gpio, uint32_t events) {
+    static absolute_time_t last_interrupt_time = {0};
+    absolute_time_t current_time = get_absolute_time();
+    
+    // Implementação do debounce
+    if (absolute_time_diff_us(last_interrupt_time, current_time) < DEBOUNCE_US) {
+        return;
+    }
+    last_interrupt_time = current_time;
+
+    // Alternar estado do LED Verde
+    led_green_state = !led_green_state;
+    gpio_put(LED_GREEN_PIN, led_green_state);
+
+    // Exibir mensagem no Serial Monitor
+    printf("Botão A pressionado! LED Verde: %s\n", led_green_state ? "ON" : "OFF");
+}
+
+void setup() {
+    stdio_init_all(); // Inicializa comunicação UART
+
+    // Configuração do LED Verde
+    gpio_init(LED_GREEN_PIN);
+    gpio_set_dir(LED_GREEN_PIN, GPIO_OUT);
+
+    // Configuração do Botão A
+    gpio_init(BUTTON_A_PIN);
+    gpio_set_dir(BUTTON_A_PIN, GPIO_IN);
+    gpio_pull_up(BUTTON_A_PIN);
+    gpio_set_irq_enabled_with_callback(BUTTON_A_PIN, GPIO_IRQ_EDGE_FALL, true, &button_a_irq_handler);
+}
 
 int main()
 {
     stdio_init_all();
 
-    while (true) {
-        printf("Hello, world!\n");
-        sleep_ms(1000);
+    while (1) {
+        sleep_ms(100); // Mantém o loop rodando sem sobrecarregar
     }
+    return 0;
 }
