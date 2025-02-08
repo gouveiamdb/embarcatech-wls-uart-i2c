@@ -1,6 +1,7 @@
 // ssd1306.c - Implementação do driver SSD1306
 
 #include "ssd1306.h"
+#include "font.h"
 #include <string.h>
 
 void ssd1306_init(ssd1306_t *display, i2c_inst_t *i2c, uint8_t address, uint8_t width, uint8_t height) {

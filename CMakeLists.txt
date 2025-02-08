@@ -14,7 +14,7 @@ pico_sdk_init()
 # Adiciona o executável
 add_executable(embarcatech-wls-uart-i2c
     embarcatech-wls-uart-i2c.c
-    ssd1306.c
+    inc/ssd1306.c
 )
 
 # Configura o nome do programa e a versão
@@ -36,6 +36,7 @@ target_link_libraries(embarcatech-wls-uart-i2c
 # Adiciona os diretórios de inclusão
 target_include_directories(embarcatech-wls-uart-i2c PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
+    inc
 )
 
 # Adiciona os binários finais
