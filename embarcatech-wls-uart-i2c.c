@@ -44,7 +44,6 @@ void update_display_message(const char *message) {
 void update_display_status(const char *status) {
     ssd1306_fill(&display, false); // Limpa o display
     ssd1306_draw_string(&display, status, 0, 20);
-    ssd1306_draw_string(&display, "Para limpar a tela, pressione o botao do Joystick!", 0, 40);
     ssd1306_send_data(&display);
 }
 
@@ -62,7 +61,7 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
         led_green_state = !led_green_state;
         gpio_put(LED_GREEN_PIN, led_green_state);
         printf("[BitDogLab] Botao A pressionado! LED Verde: %s\n", led_green_state ? "ON" : "OFF");
-        update_display_status(led_green_state ? "Botao A\nVerde     ON" : "Botao A\nVerde     OFF");
+        update_display_status(led_green_state ? "Botao A\nVerde     ON\nPara limpar a tela, pressione o botao do Joystick!" : "Botao A\nVerde     OFF\nPara limpar a tela, pressione o botao do Joystick!");
     }
 
     if (gpio == BUTTON_B_PIN) {
@@ -75,7 +74,7 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
         led_blue_state = !led_blue_state;
         gpio_put(LED_BLUE_PIN, led_blue_state);
         printf("[BitDogLab] Botao B pressionado! LED Azul: %s\n", led_blue_state ? "ON" : "OFF");
-        update_display_status(led_blue_state ? "Botao B\nAzul      ON" : "Botao B\nAzul      OFF");
+        update_display_status(led_blue_state ? "Botao B\nAzul      ON\nPara limpar a tela, pressione o botao do Joystick!" : "Botao B\nAzul      OFF\nPara limpar a tela, pressione o botao do Joystick!");
     }
 
     if (gpio == JOYSTICK_BUTTON_PIN) {
