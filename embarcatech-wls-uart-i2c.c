@@ -39,11 +39,9 @@ void update_display_message(const char *message) {
     ssd1306_send_data(&display);
 }
 
-void update_display_status() {
+void update_display_status(const char *status) {
     ssd1306_fill(&display, false); // Limpa o display
-    ssd1306_draw_string(&display, "BitDogLab Status:", 0, 0);
-    ssd1306_draw_string(&display, led_green_state ? "LED Verde: ON" : "LED Verde: OFF", 0, 8);
-    ssd1306_draw_string(&display, led_blue_state ? "LED Azul: ON" : "LED Azul: OFF", 0, 16);
+    ssd1306_draw_string(&display, status, 0, 0);
     ssd1306_send_data(&display);
 }
 
@@ -61,6 +59,7 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
         led_green_state = !led_green_state;
         gpio_put(LED_GREEN_PIN, led_green_state);
         printf("[BitDogLab] Botão A pressionado! LED Verde: %s\n", led_green_state ? "ON" : "OFF");
+        update_display_status(led_green_state ? "Botão A - Verde ON" : "Botão A - Verde OFF");
     }
 
     if (gpio == BUTTON_B_PIN) {
@@ -73,8 +72,8 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
         led_blue_state = !led_blue_state;
         gpio_put(LED_BLUE_PIN, led_blue_state);
         printf("[BitDogLab] Botão B pressionado! LED Azul: %s\n", led_blue_state ? "ON" : "OFF");
+        update_display_status(led_blue_state ? "Botão B - Azul ON" : "Botão B - Azul OFF");
     }
-    update_display_status();
 }
 
 void setup() {
@@ -97,7 +96,7 @@ void setup() {
     ssd1306_init(&display, WIDTH, HEIGHT, false, 0x3C, I2C_PORT);
     ssd1306_config(&display);
     ssd1306_fill(&display, false);
-    update_display_status();
+    update_display_status("Inicializando...");
 
     // Configuração dos LEDs
     gpio_init(LED_GREEN_PIN);
