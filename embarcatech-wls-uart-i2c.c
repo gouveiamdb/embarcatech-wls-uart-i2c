@@ -72,7 +72,7 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
         led_blue_state = !led_blue_state;
         gpio_put(LED_BLUE_PIN, led_blue_state);
         printf("[BitDogLab] Botão B pressionado! LED Azul: %s\n", led_blue_state ? "ON" : "OFF");
-        update_display_status(led_blue_state ? "Botão B - Azul ON" : "Botão B - Azul OFF");
+        update_display_status(led_blue_state ? "Botao B - Azul ON" : "Botao B - Azul OFF");
     }
 }
 
