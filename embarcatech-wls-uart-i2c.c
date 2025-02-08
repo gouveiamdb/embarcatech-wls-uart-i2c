@@ -8,10 +8,8 @@
 // Definições de hardware para BitDogLab
 #define BUTTON_A_PIN 5  // GPIO do botão A
 #define BUTTON_B_PIN 6  // GPIO do botão B
-#define JOYSTICK_BUTTON_PIN 22 // GPIO do botão do joystick
 #define LED_GREEN_PIN 11 // GPIO do LED Verde
 #define LED_BLUE_PIN 12 // GPIO do LED Azul
-#define LED_RED_PIN 13 // GPIO do LED Vermelho
 #define UART_ID uart0
 #define UART_TX_PIN 0
 #define UART_RX_PIN 1
@@ -24,12 +22,10 @@
 // Estado dos LEDs
 static volatile bool led_green_state = false;
 static volatile bool led_blue_state = false;
-static volatile bool led_red_state = false;
 
 // Variáveis de debounce separadas para cada botão
 static absolute_time_t last_interrupt_time_a;
 static absolute_time_t last_interrupt_time_b;
-static absolute_time_t last_interrupt_time_joystick;
 
 // Inicialização do display SSD1306
 ssd1306_t display;
@@ -43,7 +39,7 @@ void update_display_message(const char *message) {
 
 void update_display_status(const char *status) {
     ssd1306_fill(&display, false); // Limpa o display
-    ssd1306_draw_string(&display, status, 0, 10);
+    ssd1306_draw_string(&display, status, 0, 20);
     ssd1306_send_data(&display);
 }
 
@@ -61,7 +57,7 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
         led_green_state = !led_green_state;
         gpio_put(LED_GREEN_PIN, led_green_state);
         printf("[BitDogLab] Botao A pressionado! LED Verde: %s\n", led_green_state ? "ON" : "OFF");
-        update_display_status(led_green_state ? "Botao A        LED Verde    ON                              Para limpar a tela, pressione o botao do Joystick!" : "Botao A        LED Verde   OFF                              Para limpar a tela, pressione o botao do Joystick!");
+        update_display_status(led_green_state ? "Botao A\nVerde     ON" : "Botao A\nVerde     OFF");
     }
 
     if (gpio == BUTTON_B_PIN) {
@@ -74,24 +70,7 @@ void gpio_irq_handler(uint gpio, uint32_t events) {
         led_blue_state = !led_blue_state;
         gpio_put(LED_BLUE_PIN, led_blue_state);
         printf("[BitDogLab] Botao B pressionado! LED Azul: %s\n", led_blue_state ? "ON" : "OFF");
-        update_display_status(led_blue_state ? "Botao B        LED Azul     ON                              Para limpar a tela, pressione o botao do Joystick!" : "Botao B        LED Azul    OFF                              Para limpar a tela, pressione o botao do Joystick!");
-    }
-
-    if (gpio == JOYSTICK_BUTTON_PIN) {
-        if (absolute_time_diff_us(last_interrupt_time_joystick, current_time) < DEBOUNCE_US) {
-            return;
-        }
-        last_interrupt_time_joystick = current_time;
-
-        // Limpar a tela
-        ssd1306_fill(&display, false);
-        ssd1306_send_data(&display);
-        printf("[BitDogLab] Tela limpa pelo botao do Joystick!\n");
-
-        // Piscar o LED vermelho
-        gpio_put(LED_RED_PIN, 1);
-        sleep_ms(200); // Liga por 200ms
-        gpio_put(LED_RED_PIN, 0);
+        update_display_status(led_blue_state ? "Botao B\nAzul      ON" : "Botao B\nAzul      OFF");
     }
 }
 
@@ -126,10 +105,6 @@ void setup() {
     gpio_set_dir(LED_BLUE_PIN, GPIO_OUT);
     gpio_put(LED_BLUE_PIN, 0);
 
-    gpio_init(LED_RED_PIN);
-    gpio_set_dir(LED_RED_PIN, GPIO_OUT);
-    gpio_put(LED_RED_PIN, 0);
-
     // Configuração dos botões
     gpio_init(BUTTON_A_PIN);
     gpio_set_dir(BUTTON_A_PIN, GPIO_IN);
@@ -139,14 +114,9 @@ void setup() {
     gpio_set_dir(BUTTON_B_PIN, GPIO_IN);
     gpio_pull_up(BUTTON_B_PIN);
 
-    gpio_init(JOYSTICK_BUTTON_PIN);
-    gpio_set_dir(JOYSTICK_BUTTON_PIN, GPIO_IN);
-    gpio_pull_up(JOYSTICK_BUTTON_PIN);
-
     // Registra interrupção global
     gpio_set_irq_enabled_with_callback(BUTTON_A_PIN, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
     gpio_set_irq_enabled(BUTTON_B_PIN, GPIO_IRQ_EDGE_FALL, true);
-    gpio_set_irq_enabled(JOYSTICK_BUTTON_PIN, GPIO_IRQ_EDGE_FALL, true);
 }
 
 void process_uart_input() {
