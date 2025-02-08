@@ -55,7 +55,8 @@ target_include_directories(embarcatech-wls-uart-i2c PRIVATE
 
 # Add any user requested libraries
 target_link_libraries(embarcatech-wls-uart-i2c 
-        
+        pico_stdlib
+        hardware_gpio
         )
 
 pico_add_extra_outputs(embarcatech-wls-uart-i2c)
