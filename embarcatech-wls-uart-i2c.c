@@ -116,33 +116,10 @@ void clear_leds() {
     }
 }
 
-/*void display_number(uint8_t number) {
-    if (number > 9) return;  // Garantir que o número está dentro do intervalo válido (0-9)
-
-    uint32_t on_color = rgb_to_grb(0, 64, 0);   // Verde médio para os LEDs acesos
-    uint32_t off_color = rgb_to_grb(0, 0, 0);   // Apaga o LED 
-
-    // Limpa a matriz antes de exibir um novo número
-    clear_leds();
-    
-    // Mapeia cada posição da matriz 5x5
-    for (int y = 0; y < MATRIX_HEIGHT; y++) {
-        for (int x = 0; x < MATRIX_WIDTH; x++) {
-            // Se o padrão do número especificar que o LED deve estar aceso
-            if (number_patterns[number][y][x]) {
-                int led_index = y * MATRIX_WIDTH + x;
-                put_pixel(on_color);  // Acende o LED
-            } else {
-                put_pixel(off_color); // Apaga o LED
-            }
-        }
-    }
-}*/
-
 void display_number(uint8_t number) {
     if (number > 9) return;
 
-    uint32_t on_color = rgb_to_grb(19, 96, 48);  // Verde
+    uint32_t on_color = rgb_to_grb(3, 10, 32);  // Azul
     uint32_t off_color = rgb_to_grb(0, 0, 0);    // Apagado
     
     // Buffer para armazenar o estado de todos os LEDs
@@ -211,25 +188,6 @@ void uart_init_custom() {
     gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
     gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
 }
-
-/*void process_uart_input() {
-    if (stdio_usb_connected()) {
-        char c;
-        if (scanf("%c", &c) == 1) {
-            printf("Recebido - Char: '%c' | Dec: %d | Hex: 0x%02X\n", c, (uint8_t)c, (uint8_t)c);
-            
-            if (c >= '0' && c <= '9') {
-                uint8_t numero = c - '0';
-                printf("Exibindo número: %d\n", numero);
-                display_number(numero);  // Exibe na matriz
-            }
-            
-            char mensagem[2] = { (char)c, '\0' };
-            update_display(&display, mensagem);
-        }
-    }
-    sleep_ms(100);
-}*/
 
 void setup_buttons() {
     gpio_init(BUTTON_A_PIN);
