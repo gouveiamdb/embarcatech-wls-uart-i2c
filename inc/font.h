@@ -1,8 +1,20 @@
+#ifndef FONT_H
+#define FONT_H
 
-// Fontes para A-Z e 0-9. Os caracteres tem 8x8 pixels
+#include <stdint.h>
 
+// Definições do tamanho da fonte
+#define FONT_HEIGHT 8
+#define FONT_WIDTH 8
 
-static uint8_t font[] = {
+// Offset para cada tipo de caractere no array
+#define FONT_OFFSET_SPACE 0
+#define FONT_OFFSET_NUMBERS 1  // 0-9
+#define FONT_OFFSET_UPPERCASE 11 // A-Z
+#define FONT_OFFSET_LOWERCASE 37 // a-z
+
+// Array de fontes 8x8
+static const uint8_t font[] = {
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Nothing
 0x3e, 0x41, 0x41, 0x49, 0x41, 0x41, 0x3e, 0x00, //0
 0x00, 0x00, 0x42, 0x7f, 0x40, 0x00, 0x00, 0x00, //1
@@ -68,3 +80,25 @@ static uint8_t font[] = {
 0x44, 0x64, 0x54, 0x4C, 0x44, 0x00, 0x00, 0x00, //z
 
 };
+
+// Funções auxiliares para acessar os caracteres
+static inline uint8_t* get_char_data(char c) {
+    int index = 0;
+    
+    if (c == ' ') {
+        index = 0;
+    }
+    else if (c >= '0' && c <= '9') {
+        index = FONT_OFFSET_NUMBERS + (c - '0');
+    }
+    else if (c >= 'A' && c <= 'Z') {
+        index = FONT_OFFSET_UPPERCASE + (c - 'A');
+    }
+    else if (c >= 'a' && c <= 'z') {
+        index = FONT_OFFSET_LOWERCASE + (c - 'a');
+    }
+    
+    return (uint8_t*)&font[index * FONT_HEIGHT];
+}
+
+#endif // FONT_H

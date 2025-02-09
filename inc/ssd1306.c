@@ -7,10 +7,14 @@ void ssd1306_init(ssd1306_t *ssd, uint8_t width, uint8_t height, bool external_v
   ssd->pages = height / 8U;
   ssd->address = address;
   ssd->i2c_port = i2c;
+  ssd->external_vcc = external_vcc;
   ssd->bufsize = ssd->pages * ssd->width + 1;
   ssd->ram_buffer = calloc(ssd->bufsize, sizeof(uint8_t));
   ssd->ram_buffer[0] = 0x40;
   ssd->port_buffer[0] = 0x80;
+  
+  
+  ssd1306_config(ssd);
 }
 
 void ssd1306_config(ssd1306_t *ssd) {
@@ -69,12 +73,15 @@ void ssd1306_send_data(ssd1306_t *ssd) {
 }
 
 void ssd1306_pixel(ssd1306_t *ssd, uint8_t x, uint8_t y, bool value) {
-  uint16_t index = (y >> 3) + (x << 3) + 1;
-  uint8_t pixel = (y & 0b111);
+  if (x >= ssd->width || y >= ssd->height) return;
+  
+  uint16_t index = (y >> 3) * ssd->width + x + 1;
+  uint8_t pixel = y & 0x07;
+  
   if (value)
-    ssd->ram_buffer[index] |= (1 << pixel);
+      ssd->ram_buffer[index] |= (1 << pixel);
   else
-    ssd->ram_buffer[index] &= ~(1 << pixel);
+      ssd->ram_buffer[index] &= ~(1 << pixel);
 }
 
 void ssd1306_fill(ssd1306_t *ssd, bool value) {
@@ -147,27 +154,25 @@ void ssd1306_vline(ssd1306_t *ssd, uint8_t x, uint8_t y0, uint8_t y1, bool value
 }
 
 // Função para desenhar um caractere
-void ssd1306_draw_char(ssd1306_t *ssd, char c, uint8_t x, uint8_t y)
-{
-    uint16_t index = 0;
+void ssd1306_draw_char(ssd1306_t *ssd, char c, uint8_t x, uint8_t y) {
+  uint16_t index = 0;
 
-    if (c >= 'A' && c <= 'Z') {
-        index = (c - 'A' + 11) * 8; // Para letras maiúsculas
-    } else if (c >= 'a' && c <= 'z') {
-        index = (c - 'a' + 37) * 8; // Adiciona o deslocamento necessário para minúsculas
-    } else if (c >= '0' && c <= '9') {
-        index = (c - '0' + 1) * 8; // Adiciona o deslocamento necessário para números
-    } else {
-        // Caracteres não suportados
-        return;
-    }
+  if (c >= 'A' && c <= 'Z') {
+      index = (c - 'A' + 11) * 8;
+  } else if (c >= 'a' && c <= 'z') {
+      index = (c - 'a' + 37) * 8;
+  } else if (c >= '0' && c <= '9') {
+      index = (c - '0' + 1) * 8;
+  } else {
+      return;
+  }
 
-    for (uint8_t i = 0; i < 8; ++i) {
-        uint8_t line = font[index + i];
-        for (uint8_t j = 0; j < 8; ++j) {
-            ssd1306_pixel(ssd, x + i, y + j, line & (1 << j));
-        }
-    }
+  for (uint8_t i = 0; i < 8; i++) {
+      uint8_t line = font[index + i];
+      for (uint8_t j = 0; j < 8; j++) {
+          ssd1306_pixel(ssd, x + j, y + i, line & (1 << (7-j)));
+      }
+  }
 }
 
 

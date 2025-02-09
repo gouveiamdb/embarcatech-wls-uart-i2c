@@ -33,15 +33,15 @@ add_executable(embarcatech-wls-uart-i2c
     inc/ssd1306.c
 )
 
-# Gera o cabeçalho PIO na pasta "generated"
-pico_generate_pio_header(embarcatech-wls-uart-i2c ${CMAKE_CURRENT_LIST_DIR}/generated/ws2812.pio)
+# Gera o cabeçalho PIO (ws2812.pio.h) a partir do arquivo ws2812.pio
+pico_generate_pio_header(embarcatech-wls-uart-i2c ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
 
 # Configura o nome do programa e a versão
 pico_set_program_name(embarcatech-wls-uart-i2c "embarcatech-wls-uart-i2c")
 pico_set_program_version(embarcatech-wls-uart-i2c "0.1")
 
 # Habilita saída UART e USB
-pico_enable_stdio_uart(embarcatech-wls-uart-i2c 0)
+pico_enable_stdio_uart(embarcatech-wls-uart-i2c 1)
 pico_enable_stdio_usb(embarcatech-wls-uart-i2c 1)
 
 # Adiciona bibliotecas necessárias
@@ -57,7 +57,7 @@ target_link_libraries(embarcatech-wls-uart-i2c
 target_include_directories(embarcatech-wls-uart-i2c PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     inc
-    ${CMAKE_CURRENT_LIST_DIR}/generated 
+    ${CMAKE_CURRENT_LIST_DIR}/generated  # Adiciona o caminho para a pasta "generated"
 )
 
 # Adiciona os binários finais
