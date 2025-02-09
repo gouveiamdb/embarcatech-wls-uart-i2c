@@ -43,7 +43,7 @@ void ws2812_init(void);
 void put_pixel(uint32_t pixel_grb);
 uint32_t rgb_to_grb(uint8_t r, uint8_t g, uint8_t b);
 void clear_leds(void);
-void display_number(uint8_t num);
+void display_number(uint8_t number);
 void update_display(ssd1306_t *display, const char *text);
 void uart_init_custom(void);
 void process_uart_input(void);
@@ -116,27 +116,89 @@ void clear_leds() {
     }
 }
 
-void display_number(uint8_t number) {
-    if (number > 9) return;
-    
-    uint32_t on_color = rgb_to_grb(0, 64, 0);   // Verde médio
-    uint32_t off_color = rgb_to_grb(0, 0, 0);   // Desligado
-    
+/*void display_number(uint8_t number) {
+    if (number > 9) return;  // Garantir que o número está dentro do intervalo válido (0-9)
+
+    uint32_t on_color = rgb_to_grb(0, 64, 0);   // Verde médio para os LEDs acesos
+    uint32_t off_color = rgb_to_grb(0, 0, 0);   // Apaga o LED 
+
     // Limpa a matriz antes de exibir um novo número
     clear_leds();
     
+    // Mapeia cada posição da matriz 5x5
     for (int y = 0; y < MATRIX_HEIGHT; y++) {
         for (int x = 0; x < MATRIX_WIDTH; x++) {
-            // Calcular o índice do LED e definir a cor
-            int led_index = y * MATRIX_WIDTH + x;
+            // Se o padrão do número especificar que o LED deve estar aceso
             if (number_patterns[number][y][x]) {
-                put_pixel(on_color); // Acende o LED
+                int led_index = y * MATRIX_WIDTH + x;
+                put_pixel(on_color);  // Acende o LED
             } else {
                 put_pixel(off_color); // Apaga o LED
             }
         }
     }
+}*/
+
+void display_number(uint8_t number) {
+    if (number > 9) return;
+
+    uint32_t on_color = rgb_to_grb(19, 96, 48);  // Verde
+    uint32_t off_color = rgb_to_grb(0, 0, 0);    // Apagado
+    
+    // Buffer para armazenar o estado de todos os LEDs
+    uint32_t led_buffer[NUM_PIXELS];
+    
+    // Preenche o buffer com os estados corretos
+    for (int y = 0; y < MATRIX_HEIGHT; y++) {
+        for (int x = 0; x < MATRIX_WIDTH; x++) {
+            // Em linhas pares, a ordem é da esquerda para a direita
+            // Em linhas ímpares, a ordem é da direita para a esquerda
+            int x_pos = (y % 2 == 0) ? x : (MATRIX_WIDTH - 1 - x);
+            int led_index = y * MATRIX_WIDTH + x_pos;
+            
+            // Armazena o estado no buffer
+            led_buffer[led_index] = number_patterns[number][MATRIX_HEIGHT - 1 - y][MATRIX_WIDTH - 1 - x] ? on_color : off_color;
+            
+            // Debug para ver a ordem dos pixels
+            printf("LED[%d,%d] = %d (index=%d)\n", x, y, number_patterns[number][y][x], led_index);
+        }
+    }
+    
+    // Agora envia todos os estados para a matriz
+    for (int i = 0; i < NUM_PIXELS; i++) {
+        put_pixel(led_buffer[i]);
+    }
+    
+    // Imprime o padrão completo para debug
+    printf("\nO número %d foi digitado com sussesso!\n", number);
 }
+
+void process_uart_input() {
+    if (stdio_usb_connected()) {
+        char c;
+        if (scanf("%c", &c) == 1) {
+            printf("Recebido - Char: '%c' | Dec: %d | Hex: 0x%02X\n", c, (uint8_t)c, (uint8_t)c);
+            
+            if (c >= '0' && c <= '9') {
+                uint8_t numero = c - '0';
+                printf("Exibindo número: %d\n", numero);
+                
+                // Limpa todos os LEDs antes de mostrar um novo número
+                clear_leds();
+                
+                // Exibe o número na matriz
+                display_number(numero);
+                
+                printf("Número exibido!\n");
+            }
+            
+            char mensagem[2] = { (char)c, '\0' };
+            update_display(&display, mensagem);
+        }
+    }
+    sleep_ms(100);
+}
+
 
 void update_display(ssd1306_t *display, const char *text) {
     ssd1306_fill(display, false);
@@ -150,7 +212,7 @@ void uart_init_custom() {
     gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
 }
 
-void process_uart_input() {
+/*void process_uart_input() {
     if (stdio_usb_connected()) {
         char c;
         if (scanf("%c", &c) == 1) {
@@ -167,7 +229,7 @@ void process_uart_input() {
         }
     }
     sleep_ms(100);
-}
+}*/
 
 void setup_buttons() {
     gpio_init(BUTTON_A_PIN);
