@@ -174,24 +174,6 @@ void setup() {
     // Mensagem inicial
     printf("Digite um número de 1 a 9 para exibir na matriz:\n");
 
-    while (1) {
-        // Verifica se há dados disponíveis para leitura
-        if (uart_is_readable(UART_ID)) {
-            // Lê um caractere da UART
-            char c = uart_getc(UART_ID);
-
-            // Verifica se é um número de 1 a 9
-            if (c >= '1' && c <= '9') {
-                int number = c - '0'; // Converte o caractere para número
-                display_number(number); // Exibe o número na matriz
-                printf("Número exibido: %d\n", number);
-            } else {
-                printf("Caractere inválido: %c\n", c);
-            }
-        }
-        sleep_ms(100);
-    }
-
     // Inicializa I2C para SSD1306
     i2c_init(I2C_PORT, 400 * 1000);
     gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
@@ -240,7 +222,7 @@ void process_uart_input() {
 }
 
 // Função para inicializar o WS2812
-void ws2812_init() {
+void ws2812_init(void) {
     uint offset = pio_add_program(pio, &ws2812_program);
     ws2812_program_init(pio, sm, offset, WS2812_PIN, 800000, false);
 }
@@ -271,11 +253,13 @@ void display_number(int number) {
 }
 
 int main() {
-    setup();
+    setup(); // Chama a configuração inicial
+
     printf("[BitDogLab] Sistema inicializado. Pressione os botoes ou envie comandos via UART.\n");
+
     while (1) {
-        process_uart_input();
-        tight_loop_contents();
+        process_uart_input(); // Verifica a entrada UART
+        tight_loop_contents(); // Processa interrupções e outras tarefas
     }
     return 0;
 }
