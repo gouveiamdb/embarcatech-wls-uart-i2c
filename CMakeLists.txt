@@ -17,6 +17,9 @@ add_executable(embarcatech-wls-uart-i2c
     inc/ssd1306.c
 )
 
+# Gera o cabeçalho PIO
+pico_generate_pio_header(embarcatech-wls-uart-i2c ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
+
 # Configura o nome do programa e a versão
 pico_set_program_name(embarcatech-wls-uart-i2c "embarcatech-wls-uart-i2c")
 pico_set_program_version(embarcatech-wls-uart-i2c "0.1")
@@ -31,7 +34,6 @@ target_link_libraries(embarcatech-wls-uart-i2c
     hardware_gpio
     hardware_clocks
     hardware_i2c
-    
 )
 
 # Adiciona os diretórios de inclusão
