@@ -73,11 +73,8 @@ void ssd1306_send_data(ssd1306_t *ssd) {
 }
 
 void ssd1306_pixel(ssd1306_t *ssd, uint8_t x, uint8_t y, bool value) {
-  if (x >= ssd->width || y >= ssd->height) return;
-  
-  uint16_t index = (y >> 3) * ssd->width + x + 1;
-  uint8_t pixel = y & 0x07;
-  
+  uint16_t index = (y >> 3) + (x << 3) + 1;
+  uint8_t pixel = (y & 0b111);
   if (value)
       ssd->ram_buffer[index] |= (1 << pixel);
   else
@@ -158,39 +155,36 @@ void ssd1306_draw_char(ssd1306_t *ssd, char c, uint8_t x, uint8_t y) {
   uint16_t index = 0;
 
   if (c >= 'A' && c <= 'Z') {
-      index = (c - 'A' + 11) * 8;
+      index = (c - 'A' + 11) * 8; // Para letras maiúsculas
   } else if (c >= 'a' && c <= 'z') {
-      index = (c - 'a' + 37) * 8;
+      index = (c - 'a' + 37) * 8; // Para minúsculas
   } else if (c >= '0' && c <= '9') {
-      index = (c - '0' + 1) * 8;
+      index = (c - '0' + 1) * 8; // Para números
   } else {
+      // Caracteres não suportados
       return;
   }
 
-  for (uint8_t i = 0; i < 8; i++) {
+  for (uint8_t i = 0; i < 8; ++i) {
       uint8_t line = font[index + i];
-      for (uint8_t j = 0; j < 8; j++) {
-          ssd1306_pixel(ssd, x + j, y + i, line & (1 << (7-j)));
+      for (uint8_t j = 0; j < 8; ++j) {
+          ssd1306_pixel(ssd, x + i, y + j, line & (1 << j));
       }
   }
 }
 
 
 // Função para desenhar uma string
-void ssd1306_draw_string(ssd1306_t *ssd, const char *str, uint8_t x, uint8_t y)
-{
-  while (*str)
-  {
-    ssd1306_draw_char(ssd, *str++, x, y);
-    x += 8;
-    if (x + 8 >= ssd->width)
-    {
-      x = 0;
-      y += 8;
-    }
-    if (y + 8 >= ssd->height)
-    {
-      break;
-    }
+void ssd1306_draw_string(ssd1306_t *ssd, const char *str, uint8_t x, uint8_t y) {
+  while (*str) {
+      ssd1306_draw_char(ssd, *str++, x, y);
+      x += 8;
+      if (x + 8 >= ssd->width) {
+          x = 0;
+          y += 8;
+      }
+      if (y + 8 >= ssd->height) {
+          break;
+      }
   }
 }
