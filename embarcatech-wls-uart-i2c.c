@@ -4,7 +4,8 @@
 #include "hardware/uart.h"
 #include "hardware/i2c.h"
 #include "hardware/irq.h"
-#include "ssd1306.h"
+#include "inc/ssd1306.h"
+#include "inc/font.h"
 #include "ws2812.pio.h"
 
 // Definições de Hardware
@@ -18,14 +19,15 @@
 #define I2C_SCL 15           // Pino SCL
 #define UART_ID uart0        // Definição da UART0
 #define BAUD_RATE 115200     // Taxa de transmissão UART
-#define UART_TX_PIN 0        // Pino TX da UART
-#define UART_RX_PIN 1        // Pino RX da UART
+#define UART_TX_PIN 16        // Pino TX da UART
+#define UART_RX_PIN 17        // Pino RX da UART
 #define WS2812_PIN 7         // Pino para controlar a matriz WS2812
 #define NUM_PIXELS 25        // Número de LEDs na matriz
 #define MATRIX_SIZE 5        // Tamanho da matriz 5x5
 #define DEBOUNCE_DELAY 200   // Delay para o debouncing dos botões (em ms)
 #define MATRIX_WIDTH 5       // Largura da matriz
 #define MATRIX_HEIGHT 5      // Altura da matriz
+#define ENDERECO 0x3C        // Endereço I2C do display SSD1306
 
 // Estados e Configurações Globais
 static PIO ws2812_pio = pio0;            // PIO usado para controle da matriz WS2812
@@ -41,8 +43,8 @@ void ws2812_init(void);
 void put_pixel(uint32_t pixel_grb);
 uint32_t rgb_to_grb(uint8_t r, uint8_t g, uint8_t b);
 void clear_leds(void);
-void display_number(int num);
-void update_display(const char *text);
+void display_number(uint8_t num);
+void update_display(ssd1306_t *display, const char *text);
 void uart_init_custom(void);
 void process_uart_input(void);
 void setup_buttons(void);
@@ -67,31 +69,26 @@ const uint8_t number_patterns[10][MATRIX_SIZE][MATRIX_SIZE] = {
 void gpio_callback(uint gpio, uint32_t events) {
     uint32_t current_time = to_ms_since_boot(get_absolute_time());
     
-    // Verifica se o botão A foi pressionado e faz a alternância do LED verde
     if (gpio == BUTTON_A_PIN) {
         if (current_time - last_button_a_time >= DEBOUNCE_DELAY) {
             led_green_state = !led_green_state;
             gpio_put(LED_GREEN_PIN, led_green_state);
             
-            // Atualiza o display e envia mensagem UART
             char msg[50];
             sprintf(msg, "Botao A        LED Verde: %s", led_green_state ? "ON" : "OFF");
-            update_display(msg);
+            update_display(&display, msg);
             printf("%s\n", msg);
             
             last_button_a_time = current_time;
         }
-    }
-    // Verifica se o botão B foi pressionado e faz a alternância do LED azul
-    else if (gpio == BUTTON_B_PIN) {
+    } else if (gpio == BUTTON_B_PIN) {
         if (current_time - last_button_b_time >= DEBOUNCE_DELAY) {
             led_blue_state = !led_blue_state;
             gpio_put(LED_BLUE_PIN, led_blue_state);
             
-            // Atualiza o display e envia mensagem UART
             char msg[50];
             sprintf(msg, "Botao B        LED Azul: %s", led_blue_state ? "ON" : "OFF");
-            update_display(msg);
+            update_display(&display, msg);
             printf("%s\n", msg);
             
             last_button_b_time = current_time;
@@ -105,77 +102,73 @@ void ws2812_init() {
     ws2812_program_init(ws2812_pio, ws2812_sm, offset, WS2812_PIN, 800000, false);
 }
 
-// Função para enviar um pixel para a matriz WS2812
 void put_pixel(uint32_t pixel_grb) {
     pio_sm_put_blocking(ws2812_pio, ws2812_sm, pixel_grb << 8u);
 }
 
-// Função para converter RGB para GRB, formato necessário para a matriz WS2812
 uint32_t rgb_to_grb(uint8_t r, uint8_t g, uint8_t b) {
     return (g << 16) | (r << 8) | b;
 }
 
-// Limpa todos os LEDs da matriz WS2812
 void clear_leds() {
     for(int i = 0; i < NUM_PIXELS; i++) {
         put_pixel(0);  // Apaga o LED
     }
 }
 
-// Função que exibe um número (0-9) na matriz de LEDs 5x5
-void display_number(int number) {
-    if (number < 0 || number > 9) return;
-
-    // Itera sobre cada linha e coluna da matriz para desenhar o número
-    for (int row = 0; row < MATRIX_HEIGHT; row++) {
-        for (int col = 0; col < MATRIX_WIDTH; col++) {
-            // Ajusta o índice baseado na linha (par/ímpar)
-            int actual_col = (row % 2 == 0) ? col : (MATRIX_WIDTH - 1 - col);
-            if (number_patterns[number][row][actual_col]) {
-                put_pixel(rgb_to_grb(19, 96, 48)); // Cor para os LEDs acesos
+void display_number(uint8_t number) {
+    if (number > 9) return;
+    
+    uint32_t on_color = rgb_to_grb(0, 64, 0);   // Verde médio
+    uint32_t off_color = rgb_to_grb(0, 0, 0);   // Desligado
+    
+    // Limpa a matriz antes de exibir um novo número
+    clear_leds();
+    
+    for (int y = 0; y < MATRIX_HEIGHT; y++) {
+        for (int x = 0; x < MATRIX_WIDTH; x++) {
+            // Calcular o índice do LED e definir a cor
+            int led_index = y * MATRIX_WIDTH + x;
+            if (number_patterns[number][y][x]) {
+                put_pixel(on_color); // Acende o LED
             } else {
-                put_pixel(0); // LED apagado
+                put_pixel(off_color); // Apaga o LED
             }
         }
     }
-    sleep_us(50);  // Delay para atualizar a matriz
 }
 
-// Funções do Display
-void update_display(const char *text) {
-    ssd1306_fill(&display, false);
-    ssd1306_draw_string(&display, text, 0, 20);
-    ssd1306_send_data(&display);
+void update_display(ssd1306_t *display, const char *text) {
+    ssd1306_fill(display, false);
+    ssd1306_draw_string(display, text, 10, 25);
+    ssd1306_send_data(display);
 }
 
-// Inicialização UART
 void uart_init_custom() {
     uart_init(UART_ID, BAUD_RATE);
     gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
     gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
 }
 
-// Processamento de entrada UART
 void process_uart_input() {
-    if(uart_is_readable(UART_ID)) {
-        char received = uart_getc(UART_ID);
-        char display_text[50];
-        
-        // Exibe o caractere recebido no display
-        sprintf(display_text, "Recebido: %c", received);
-        update_display(display_text);
-        
-        // Se for um número, exibe na matriz de LEDs
-        if(received >= '0' && received <= '9') {
-            int num = received - '0';  // Converte o caractere para inteiro
-            display_number(num);       // Exibe o número na matriz
+    if (stdio_usb_connected()) {
+        char c;
+        if (scanf("%c", &c) == 1) {
+            printf("Recebido - Char: '%c' | Dec: %d | Hex: 0x%02X\n", c, (uint8_t)c, (uint8_t)c);
+            
+            if (c >= '0' && c <= '9') {
+                uint8_t numero = c - '0';
+                printf("Exibindo número: %d\n", numero);
+                display_number(numero);  // Exibe na matriz
+            }
+            
+            char mensagem[2] = { (char)c, '\0' };
+            update_display(&display, mensagem);
         }
-        
-        printf("Caractere recebido: %c\n", received);
     }
+    sleep_ms(100);
 }
 
-// Configuração dos botões
 void setup_buttons() {
     gpio_init(BUTTON_A_PIN);
     gpio_init(BUTTON_B_PIN);
@@ -184,12 +177,10 @@ void setup_buttons() {
     gpio_pull_up(BUTTON_A_PIN);
     gpio_pull_up(BUTTON_B_PIN);
     
-    // Configuração das interrupções
     gpio_set_irq_enabled_with_callback(BUTTON_A_PIN, GPIO_IRQ_EDGE_FALL, true, &gpio_callback);
     gpio_set_irq_enabled(BUTTON_B_PIN, GPIO_IRQ_EDGE_FALL, true);
 }
 
-// Configuração dos LEDs
 void setup_leds() {
     gpio_init(LED_GREEN_PIN);
     gpio_init(LED_BLUE_PIN);
@@ -199,7 +190,6 @@ void setup_leds() {
     gpio_set_dir(LED_RED_PIN, GPIO_OUT);
 }
 
-// Configuração do Display
 void setup_display() {
     i2c_init(I2C_PORT, 400000);
     gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
@@ -207,31 +197,19 @@ void setup_display() {
     gpio_pull_up(I2C_SDA);
     gpio_pull_up(I2C_SCL);
     
-    ssd1306_init(&display, 128, 64, false, 0x3C, I2C_PORT);
+    ssd1306_init(&display, 128, 64, false, ENDERECO, I2C_PORT);
     ssd1306_fill(&display, false);
-    update_display("Sistema Pronto!");
+    update_display(&display, "Sistema Pronto!");
 }
 
 int main() {
     stdio_init_all();
     
-    // Inicialização dos componentes
     setup_leds();
     setup_buttons();
     uart_init_custom();
 
     ws2812_init();
-    // Teste inicial - acende todos os LEDs em sequência
-    for (int i = 0; i < NUM_PIXELS; i++) {
-        put_pixel(rgb_to_grb(19, 96, 48));
-        sleep_ms(50);
-    }
-    sleep_ms(500);
-    // Apaga todos
-    for (int i = 0; i < NUM_PIXELS; i++) {
-        put_pixel(0);
-    }
-    sleep_ms(500);
 
     setup_display();
     clear_leds();

@@ -47,10 +47,9 @@ pico_enable_stdio_usb(embarcatech-wls-uart-i2c 1)
 # Adiciona bibliotecas necessárias
 target_link_libraries(embarcatech-wls-uart-i2c
     pico_stdlib
-    hardware_gpio
-    hardware_clocks
-    hardware_i2c
-    hardware_pio
+    hardware_pio    # Para WS2812
+    hardware_i2c    # Para o display
+    hardware_uart   # Para comunicação serial
 )
 
 # Adiciona os diretórios de inclusão, incluindo a pasta "generated"
