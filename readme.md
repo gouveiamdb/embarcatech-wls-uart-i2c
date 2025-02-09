@@ -7,16 +7,17 @@ Este projeto implementa o controle de **LEDs RGB**, **Display OLED (SSD1306)** e
 - **UART**: Recebe um caractere via comunicação serial e exibe números na matriz WS2812 e no display OLED.
 - **Display OLED (SSD1306)**: Exibe caracteres recebidos através da UART.
 - **Matriz de LEDs WS2812**: Exibe números de 0 a 9 em uma matriz 5x5 de LEDs.
-- **Botões**: Controle dos LEDs RGB (vermelho, verde e azul) através de botões físicos (Botão A e Botão B).
+- **Botões**: Controle dos LEDs RGB (verde e azul) através de botões físicos (Botão A e Botão B).
 
 ---
 
 ## 🎯 Funcionalidades Implementadas
 
 1. **Leitura via UART**  
-   O código lê um caractere recebido via UART e exibe:  
+   O código lê um caractere recebido via UART (serial monitor) e exibe:  
    - Números de 0 a 9 na matriz WS2812.  
-   - O caractere no display OLED.  
+   - O caractere no display OLED SSD1306. 
+   - O caractere '*' limpa a matriz WS2812 e o display OLED SSD1306.
 
 2. **Controle dos LEDs RGB**  
    O estado dos LEDs RGB pode ser alterado pressionando os botões A e B.  

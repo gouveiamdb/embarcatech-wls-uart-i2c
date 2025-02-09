@@ -63,6 +63,9 @@ const uint8_t number_patterns[10][MATRIX_SIZE][MATRIX_SIZE] = {
     {{1,1,1,1,1}, {1,0,0,0,1}, {1,1,1,1,1}, {0,0,0,0,1}, {1,1,1,1,1}}   // Número 9
 };
 
+// Declaração antecipada da função update_display
+void update_display(ssd1306_t *display, const char *text);
+
 // Callback de interrupção para os botões
 void gpio_callback(uint gpio, uint32_t events) {
     uint32_t current_time = to_ms_since_boot(get_absolute_time());
@@ -207,6 +210,7 @@ void setup_buttons() {
     gpio_set_dir(BUTTON_B_PIN, GPIO_IN);
     gpio_pull_up(BUTTON_A_PIN);
     gpio_pull_up(BUTTON_B_PIN);
+
     
     gpio_set_irq_enabled_with_callback(BUTTON_A_PIN, GPIO_IRQ_EDGE_FALL, true, &gpio_callback);
     gpio_set_irq_enabled(BUTTON_B_PIN, GPIO_IRQ_EDGE_FALL, true);
