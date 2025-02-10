@@ -90,7 +90,7 @@ Este projeto implementa o controle de **LEDs RGB**, **Display OLED (SSD1306)** e
 - O vídeo de demonstração exibe:
   - Funcionamento do código.
   - Explicação das funcionalidades implementadas.
-   [Video Demonstrativo](https://drive.google.com/file/d/1hQ3ad8FZgAsHX4Zvxa-uTeODmCXA-c7H/view?usp=sharing)
+   [Video Demonstrativo](https://drive.google.com/file/d/10FSCGffz7tmVasIFiXSE_Ti72GdbzqDM/view?usp=sharing)
 ---
 
 
