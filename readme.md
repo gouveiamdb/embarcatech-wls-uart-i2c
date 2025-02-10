@@ -84,6 +84,17 @@ Este projeto implementa o controle de **LEDs RGB**, **Display OLED (SSD1306)** e
 6. Observe os LEDs e o display OLED alternando conforme os caracteres recebidos.
 
 ---
+## 📹 Demonstração do Projeto
+
+### Vídeo de Demonstração
+- O vídeo de demonstração exibe:
+  - Funcionamento do LED RGB piscando em vermelho.
+  - Incremento e decremento dos números exibidos na matriz de LEDs ao pressionar os botões A e B.
+  - Explicação das funcionalidades implementadas.
+   [Video Demonstrativo](https://drive.google.com/file/d/1hQ3ad8FZgAsHX4Zvxa-uTeODmCXA-c7H/view?usp=sharing)
+---
+
+
 
 ## 💻 Autor
 - **Matheus Gouveia de Deus Bastos**
